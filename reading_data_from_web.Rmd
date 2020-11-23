@@ -1,0 +1,124 @@
+---
+title: "Linear models"
+output: github_document
+---
+
+
+##Set-up
+```{r setup, include = FALSE}
+library(tidyverse)
+library(p8105.datasets)
+
+
+knitr::opts_chunk$set(
+	fig.width = 6, 
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis" 
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+
+##Import data
+```{r}
+data("nyc_airbnb")
+
+nyc_airbnb = 
+  nyc_airbnb %>% 
+  mutate(stars = review_scores_location / 2) %>% 
+  rename(
+    borough = neighbourhood_group,
+    neighborhood = neighbourhood) %>% 
+  filter(borough != "Staten Island") %>% 
+  select(price, stars, borough, neighborhood, room_type)
+```
+
+
+##Fit the first model: price = star, borough
+
+###look at the data first
+```{r}
+nyc_airbnb %>% 
+  ggplot(aes(x=stars, y = price, color = borough)) + 
+  geom_point()
+```
+
+###Fit the linear model
+```{r}
+fit = lm(price ~ stars + borough, data = nyc_airbnb)
+```
+
+### take a look at the result
+```{r, include=FALSE}
+summary(fit)
+summary(fit)$coef
+coef(fit)
+fitted.values(fit)
+```
+
+###tidy the result
+```{r}
+# WE can get a tibble using broom for futhur analysis
+fit %>% 
+  broom::glance()
+
+fit %>% 
+  broom::tidy()
+
+fit %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  mutate(term = str_replace(term, "^borough", "Borough: ")) %>% 
+  knitr::kable(digits = 3)
+```
+
+###take control of factors: 
+
+When introduce a character variabl into the model, R will automatically convert it into a factor. 
+```{r}
+nyc_airbnb = 
+  nyc_airbnb %>% 
+  mutate(
+    borough = fct_infreq(borough),
+    room_type = fct_infreq(room_type)
+  )
+
+#Look at the plot again: 
+nyc_airbnb %>% 
+  ggplot(aes(x=stars, y = price, color = borough)) + 
+  geom_point()
+
+#Refit the model: 
+fit = lm(price ~ stars + borough, data = nyc_airbnb)
+
+fit %>% 
+  broom::tidy()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
